@@ -1,0 +1,17 @@
+# Transcrição de áudio local (faster-whisper). Opcional.
+# docker compose up -d whisper  →  KAI_WHISPER_URL=http://127.0.0.1:9000
+services:
+  whisper:
+    build: ./whisper
+    restart: unless-stopped
+    environment:
+      WHISPER_MODEL: small     # tiny | base | small | medium (maior = melhor e mais lento)
+      WHISPER_LANG: pt
+    ports:
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - whisper_models:/models
+    mem_limit: 2g
+
+volumes:
+  whisper_models:

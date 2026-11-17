@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lembrete:*)",
+      "Bash(lembrete criar:*)",
+      "Bash(lembrete listar)",
+      "Bash(lembrete cancelar:*)",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(rm -rf:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Read(~/.ssh/**)",
+      "Read(**/.env)"
+    ]
+  },
+  "model": "haiku"
+}

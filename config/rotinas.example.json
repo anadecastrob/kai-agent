@@ -1,0 +1,18 @@
+[
+  {
+    "nome": "briefing",
+    "canal": "briefing",
+    "dias": ["seg", "ter", "qua", "qui", "sex"],
+    "hora": "07:30",
+    "ate": "11:59",
+    "pedido": "Faça o briefing da manhã seguindo a seção \"Briefing da manhã\" do CLAUDE.md.\nClima de hoje: {clima}."
+  },
+  {
+    "nome": "resumo-ideias",
+    "canal": "ideias",
+    "dias": ["dom"],
+    "hora": "21:00",
+    "ate": "23:59",
+    "pedido": "Faça o resumo semanal da caixa de ideias, seguindo a seção \"Resumo semanal de ideias\" do CLAUDE.md."
+  }
+]

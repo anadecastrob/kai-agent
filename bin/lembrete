@@ -1,0 +1,91 @@
+#!/usr/bin/env -S python3 -I
+"""Lembretes do Kai. O Kai entrega por DM na hora marcada.
+
+  lembrete criar "AAAA-MM-DD HH:MM" "texto" [--repetir diario|dias-uteis|semanal|mensal]
+  lembrete listar
+  lembrete cancelar <id>
+
+Horários no fuso do .env (KAI_FUSO, padrão America/Sao_Paulo). O banco fica em $KAI_DADOS/lembretes.db.
+"""
+import argparse
+import os
+import sqlite3
+import sys
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+DADOS = os.environ.get("KAI_DADOS") or os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "dados")
+DB = os.path.join(DADOS, "lembretes.db")
+FUSO = ZoneInfo(os.environ.get("KAI_FUSO", "America/Sao_Paulo"))
+REPETIR = ["diario", "dias-uteis", "semanal", "mensal"]
+DIAS = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
+
+
+def conectar():
+    os.makedirs(DADOS, exist_ok=True)
+    c = sqlite3.connect(DB, timeout=10)
+    c.execute("pragma journal_mode=wal")
+    c.execute("""create table if not exists lembretes (
+        id integer primary key autoincrement,
+        quando text not null,          -- ISO em UTC
+        texto text not null,
+        repetir text,
+        criado text not null,
+        enviado_em text,
+        cancelado integer not null default 0)""")
+    return c
+
+
+def fmt(iso):
+    d = datetime.fromisoformat(iso).astimezone(FUSO)
+    return f"{DIAS[d.weekday()]} {d:%d/%m %H:%M}"
+
+
+def criar(a):
+    try:
+        quando = datetime.strptime(a.quando.strip(), "%Y-%m-%d %H:%M").replace(tzinfo=FUSO)
+    except ValueError:
+        sys.exit('Data inválida. Use "AAAA-MM-DD HH:MM".')
+    if quando < datetime.now(FUSO) - timedelta(minutes=1):
+        sys.exit(f"Esse horário já passou ({fmt(quando.isoformat())}).")
+    texto = a.texto.strip()
+    if not texto:
+        sys.exit("O texto do lembrete está vazio.")
+    with conectar() as c:
+        cur = c.execute("insert into lembretes (quando, texto, repetir, criado) values (?, ?, ?, ?)",
+                        (quando.astimezone(timezone.utc).isoformat(), texto[:1500], a.repetir,
+                         datetime.now(timezone.utc).isoformat()))
+    rep = f", repete {a.repetir}" if a.repetir else ""
+    print(f"Lembrete #{cur.lastrowid} criado: {fmt(quando.isoformat())}{rep} · {texto}")
+
+
+def listar(_):
+    with conectar() as c:
+        rows = c.execute("select id, quando, texto, repetir from lembretes "
+                         "where cancelado = 0 and enviado_em is null order by quando").fetchall()
+    if not rows:
+        print("Nenhum lembrete pendente.")
+    for i, q, t, r in rows:
+        print(f"#{i} · {fmt(q)}{' · repete ' + r if r else ''} · {t}")
+
+
+def cancelar(a):
+    with conectar() as c:
+        n = c.execute("update lembretes set cancelado = 1 where id = ? and cancelado = 0 and enviado_em is null",
+                      (a.id,)).rowcount
+    print(f"Lembrete #{a.id} cancelado." if n else f"Não achei lembrete pendente #{a.id}.")
+
+
+p = argparse.ArgumentParser(prog="lembrete")
+s = p.add_subparsers(dest="cmd", required=True)
+c1 = s.add_parser("criar")
+c1.add_argument("quando")
+c1.add_argument("texto")
+c1.add_argument("--repetir", choices=REPETIR)
+c1.set_defaults(f=criar)
+s.add_parser("listar").set_defaults(f=listar)
+c3 = s.add_parser("cancelar")
+c3.add_argument("id", type=int)
+c3.set_defaults(f=cancelar)
+a = p.parse_args()
+a.f(a)

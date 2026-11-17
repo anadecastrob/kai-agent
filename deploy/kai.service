@@ -1,0 +1,18 @@
+# Serviço systemd (Linux). O install.sh preenche USUARIO e PASTA e instala em /etc/systemd/system/kai.service.
+[Unit]
+Description=Kai: assistente pessoal no Discord (Claude Code)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=USUARIO
+WorkingDirectory=PASTA
+EnvironmentFile=PASTA/.env
+Environment=PATH=HOMEDIR/.local/bin:HOMEDIR/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=HOMEDIR/.bun/bin/bun src/kai.ts
+Restart=always
+RestartSec=15
+MemoryMax=1500M
+
+[Install]
+WantedBy=multi-user.target

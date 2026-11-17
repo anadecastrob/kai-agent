@@ -1,0 +1,6 @@
+node_modules/
+.env
+dados/
+persona/CLAUDE.md
+config/rotinas.json
+.DS_Store

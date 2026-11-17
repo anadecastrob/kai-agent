@@ -1,0 +1,15 @@
+{
+  "name": "kai-agent",
+  "version": "0.1.0",
+  "description": "Kai: assistente pessoal no Discord movido pelo Claude Code",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "bun src/kai.ts",
+    "check": "bun build src/kai.ts --target=bun --outdir=/tmp/kai-check"
+  },
+  "dependencies": {
+    "discord.js": "^14.28.0"
+  }
+}
